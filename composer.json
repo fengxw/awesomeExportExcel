@@ -1,0 +1,22 @@
+{
+    "name": "fengxw/awesomeExportExcel",
+    "description": "The easier way to export excel",
+    "keywords": ["excel"],
+    "license": "MIT",
+    "homepage": "https://github.com/fengxw/awesomeExportExcel",
+    "authors": [
+        {
+            "name": "Albert",
+            "email": "feng235ping@gmail.com"
+        }
+    ],
+    "require": {
+        "php": ">=5.3",
+        "phpoffice/phpexcel": "^1.8",
+    },
+    "autoload": {
+        "psr-4": {
+            "Fengxw\\ExportExcel\\" : "src",
+        },
+    },
+}
