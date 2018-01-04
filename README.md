@@ -1,6 +1,6 @@
 ## Awesome export excel
 
-It's an easier way to export ant excel. you don't need to worry about the detail, the default style of excel is enough for you.
+It's an easier way to export an excel. you don't need to worry about the detail, the default style of excel is enough for you.
 
 ### Install
 
@@ -15,9 +15,9 @@ composer require fengxw/awesome-export-excel
 $header = 'It is an header';
 $title = ['column1', 'column2'];
 $data = [['value1', 'value2']];
-$sheetName = 'sheet 1';
 
 // export excel
-$exportExcel = new ExportExcel();
-$exportExcel->export($header, $title, $data, $sheetName);
+ExportExcel::getInstance()->export($header, $title, $data);
 ```
+
+![alt text](screenshot1.png "example")

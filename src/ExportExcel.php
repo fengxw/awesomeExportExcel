@@ -1,9 +1,14 @@
 <?php
 
-namespace Fengxw\ExportExcel\;
+namespace Fengxw\ExportExcel;
 
 class ExportExcel
 {
+    static function getInstance()
+    {
+        return new self();
+    }
+
     /**
      * export excel.
      *
@@ -162,7 +167,7 @@ class ExportExcel
      * convert num to letter
      * e.g: 1->a, 26->z, 27->aa.
      *
-     * @param $num // min 1
+     * @param $num // minimum 1
      * @param bool $uppercase
      *
      * @return string
