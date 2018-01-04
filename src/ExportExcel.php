@@ -9,7 +9,8 @@ class ExportExcel
      *
      * @param string $header
      * @param array $title ['column1', 'column2']
-     * @param array $data, e.g. [['value1', 'value2']] // two-dimension array, the order of column and value should be same.
+     * @param array $data, e.g. [['value1', 'value2']]
+     *   data is a two-dimension array, the order of column and value should be same.
      * @param string $sheetName
      */
     public function export(
