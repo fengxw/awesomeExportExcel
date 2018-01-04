@@ -4,9 +4,8 @@ It's an easier way to export ant excel. you don't need to worry about the detail
 
 ### Install
 
-
 ```console
-composer require fengxw\awesomeExportExcel
+composer require fengxw/awesome-export-excel
 ```
 
 ### Usage
