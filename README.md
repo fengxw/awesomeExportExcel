@@ -17,7 +17,7 @@ $title = ['column1', 'column2'];
 $data = [['value1', 'value2']];
 
 // export excel
-ExportExcel::getInstance()->simpleExport($header, $title, $data);
+ExportExcel::getInstance()->export($header, $title, $data);
 ```
 
 ![alt text](screenshot1.png "simple")
