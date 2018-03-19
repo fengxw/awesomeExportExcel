@@ -1,21 +1,31 @@
 <?php
 
-namespace Fengxw\ExportExcel;
+namespace Fengxw\Excel;
 
 class ExportExcel
 {
-    static function getInstance()
+    /**
+     * object of phpExcel.
+     */
+    public $excelObj;
+
+    public function __construct()
+    {
+        $this->excelObj = new \PHPExcel();
+    }
+
+    public static function getInstance()
     {
         return new self();
     }
 
     /**
-     * export excel.
+     * Export excel simple.
      *
      * @param string $header
-     * @param array $title ['column1', 'column2']
-     * @param array $data, e.g. [['value1', 'value2']]
-     *   data is a two-dimension array, the order of column and value should be same.
+     * @param array  $title     ['column1', 'column2']
+     * @param array  $data,     e.g. [['value1', 'value2']]
+     *                          data is a two-dimension array, the order of column and value should be same.
      * @param string $sheetName
      */
     public function export(
@@ -24,143 +34,305 @@ class ExportExcel
         $data,
         $sheetName = 'sheet 1'
     ) {
-        $objPHPExcel = new \PHPExcel();
+        // set header
+        $endOffset = self::numToLetter(count($title), true);
+        $this->setHead($header, $endOffset.'1', $sheetName);
 
         // set title
-        $endOffset = self::numToLetter(count($title), true);
-        $this->setExcelTitle($objPHPExcel, $title, $endOffset);
-
-        // set header
-        $this->setExcelHead($objPHPExcel, $header, $endOffset.'1', $sheetName);
+        $this->setTitle($title);
 
         // set data
         $rowCount = 3;
-        $this->setExcelData($objPHPExcel, $data, $rowCount);
+        $this->setData($data, $rowCount);
 
         // set global style
         $rowCount = count($data) + 2;
         $endCell = $endOffset.$rowCount;
-        $this->setExcelGlobalStyle($objPHPExcel, 'A2', $endCell);
+        $this->setDefaultStyle('A2', $endCell);
 
         // export
-        $filename = time().'.xls';
-        header('Content-Type: application/vnd.ms-excel');
-        header('Content-Disposition: attachment;filename='.$filename);
-        header('Cache-Control: max-age=0');
-
-        $objWriter = \PHPExcel_IOFactory::createWriter($objPHPExcel, 'Excel5');
-        $objWriter->save('php://output');
+        $this->output(time().'.xls');
     }
 
     /**
      * Set excel header.
      *
-     * @param \PHPExcel $objPHPExcel
-     * @param $HeadTxt
+     * @param $headTxt
      * @param $endCell
-     * @param $sheetName
+     * @param string $sheetName
+     * @param string $startCell
+     * @param int    $height
+     * @param array  $excelStyle
+     *
+     * @return $this
      */
-    public function setExcelHead($objPHPExcel, $HeadTxt, $endCell, $sheetName = 'sheet 1')
-    {
-        $objPHPExcel->setActiveSheetIndex(0);
-        $objPHPExcel->getActiveSheet()->setTitle($sheetName);
-
-        $startCell = 'A1';
-        $objPHPExcel->getActiveSheet()->setCellValue($startCell, $HeadTxt);
-        $objPHPExcel->getActiveSheet()->mergeCells($startCell.':'.$endCell);
+    public function setHead(
+        $headTxt,
+        $endCell,
+        $sheetName = 'sheet 1',
+        $startCell = 'A1',
+        $height = 40,
+        $excelStyle = []
+    ) {
+        $this->excelObj->setActiveSheetIndex(0);
+        $this->excelObj->getActiveSheet()->setTitle($sheetName);
 
         $styleHeader = [
-            'borders' => [
-                'allborders' => [
-                    'style' => \PHPExcel_Style_Border::BORDER_THIN,
-                ],
-            ],
-            'font' => [
-                'bold' => true,
-                'size' => 14,
-            ],
-            'alignment' => [
-                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER,
-                'wrap' => true,
-            ],
+            'start' => $startCell,
+            'end' => $endCell,
+            'height' => $height,
         ];
 
-        $objPHPExcel
-            ->getActiveSheet()
-            ->getStyle($startCell.':'.$endCell)
-            ->applyFromArray($styleHeader);
+        if (!empty($style['style'])) {
+            $styleHeader['style'] = $excelStyle;
+        } else {
+            $styleHeader['style'] = [
+                'borders' => [
+                    'allborders' => [
+                        'style' => \PHPExcel_Style_Border::BORDER_THIN,
+                    ],
+                ],
+                'font' => [
+                    'bold' => true,
+                    'size' => 14,
+                ],
+                'alignment' => [
+                    'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                    'wrap' => true,
+                ],
+            ];
+        }
 
-        //set hight of row as 40
-        $objPHPExcel
-            ->getActiveSheet()
-            ->getRowDimension('1')
-            ->setRowHeight(40);
+        $this->setStyle($styleHeader)
+            ->setCell($headTxt, $startCell, $endCell);
+
+        return $this;
     }
 
     /**
      * Set excel columns.
      *
-     * @param \PHPExcel $objPHPExcel
      * @param array $title
-     * @param $endOffset
+     *
+     * @return $this
      */
-    public function setExcelTitle($objPHPExcel, $title, $endOffset)
+    public function setTitle($title)
     {
-        $objPHPExcel->getActiveSheet()->fromArray($title, null, 'A2', true);
+        $this->setData($title, 2);
 
-        // set width of column as 15
-        foreach (range('A', $endOffset) as $item) {
-            $objPHPExcel->getActiveSheet()->getColumnDimension($item)->setWidth(15);
-        }
+        return $this;
     }
 
     /**
      * Set excel data.
      *
-     * @param \PHPExcel $objPHPExcel
      * @param $data
      * @param $rowCount
+     *
+     * @return $this
      */
-    public function setExcelData($objPHPExcel, $data, $rowCount)
+    public function setData($data, $rowCount, $startColumn = 'A')
     {
-        $objPHPExcel
+        $this->excelObj
             ->getActiveSheet()
             ->fromArray(
                 $data,
                 null,
-                'A'.$rowCount,
+                $startColumn.$rowCount,
                 true
             );
+
+        return $this;
     }
 
     /**
-     * Set global style.
+     * Set cell.
      *
-     * @param \PHPExcel $objPHPExcel
      * @param $startCell
      * @param $endCell
+     * @param $value
+     *
+     * @return $this
      */
-    public function setExcelGlobalStyle($objPHPExcel, $startCell, $endCell)
+    public function setCell($value, $startCell, $endCell = '')
     {
-        $objPHPExcel->getActiveSheet()->getStyle();
-        $styleTitle = [
-            'alignment' => [
-                'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER,
-                'wrap' => true,
-            ],
-            'borders' => [
-                'allborders' => [
-                    'style' => \PHPExcel_Style_Border::BORDER_THIN,
+        $this->excelObj->getActiveSheet()->setCellValue($startCell, $value);
+
+        if ($endCell) {
+            $this->excelObj->getActiveSheet()->mergeCells($startCell.':'.$endCell);
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set key cell.
+     *
+     * @param $key
+     * @param $value
+     * @param $startCell
+     * @param string $endCell
+     * @param string $mediumCell
+     *
+     * @return $this
+     */
+    public function setKeyCell($key, $value, $startCell, $endCell, $mediumCell = '')
+    {
+        $this->setCell($key, $startCell, $mediumCell);
+
+        if (!$mediumCell) {
+            $mediumCell = $startCell;
+        }
+
+        $mediumCell = self::incrColumn($mediumCell);
+
+        $this->setCell($value, $mediumCell, $endCell);
+
+        return $this;
+    }
+
+    /**
+     * Set style.
+     *
+     * @param $style
+     *
+     * @return $this
+     */
+    public function setStyle($style)
+    {
+        $startCell = $style['start'];
+        $endCell = $style['end'];
+        $excelStyle = $style['style'];
+
+        $this->excelObj->getActiveSheet()->getStyle();
+        $this->excelObj
+            ->getActiveSheet()
+            ->getStyle($startCell.':'.$endCell)
+            ->applyFromArray($excelStyle);
+
+        // set width of column
+        if ($style['width']) {
+            $sColumn = substr($startCell, 0, 1);
+            $eColumn = substr($endCell, 0, 1);
+
+            foreach (range($sColumn, $eColumn) as $item) {
+                $this->excelObj
+                    ->getActiveSheet()
+                    ->getColumnDimension($item)
+                    ->setWidth($style['width']);
+            }
+        }
+
+        //set height of row
+        if ($style['height']) {
+            $sRow = self::findNum($startCell);
+            $eRow = self::findNum($endCell);
+
+            foreach (range($sRow, $eRow) as $item) {
+                $this->excelObj
+                    ->getActiveSheet()
+                    ->getRowDimension($item)
+                    ->setRowHeight($style['height']);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * Set default style.
+     *
+     * @param $startCell
+     * @param $endCell
+     * @param int   $width
+     * @param int   $height
+     * @param array $excelStyle
+     *
+     * @return $this
+     */
+    public function setDefaultStyle($startCell, $endCell, $width = 15, $height = 30, $excelStyle = [])
+    {
+        $style = [
+            'start' => $startCell,
+            'end' => $endCell,
+            'width' => $width,
+            'height' => $height,
+            'style' => [
+                'alignment' => [
+                    'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                    'wrap' => true,
+                ],
+                'borders' => [
+                    'allborders' => [
+                        'style' => \PHPExcel_Style_Border::BORDER_THIN,
+                    ],
                 ],
             ],
         ];
 
-        $objPHPExcel
-            ->getActiveSheet()
-            ->getStyle($startCell.':'.$endCell)
-            ->applyFromArray($styleTitle);
+        if (!empty($excelStyle)) {
+            $style['style'] = $excelStyle;
+        }
+
+        $this->setStyle($style);
+
+        return $this;
+    }
+
+    /**
+     * Output excel file.
+     *
+     * @param $filename
+     */
+    public function output($filename)
+    {
+        header('Content-Type: application/vnd.ms-excel');
+        header('Content-Disposition: attachment;filename='.$filename);
+        header('Cache-Control: max-age=0');
+
+        $objWriter = \PHPExcel_IOFactory::createWriter($this->excelObj, 'Excel5');
+        $objWriter->save('php://output');
+    }
+
+    /**
+     * increase column of cell.
+     *
+     * @param $cell
+     *
+     * @return string
+     */
+    public static function incrColumn($cell)
+    {
+        $column = substr($cell, 0, 1);
+        $row = self::findNum($cell);
+        ++$column;
+
+        return $column.$row;
+    }
+
+    /**
+     * Get num of cell.
+     *
+     * @param string $str
+     *
+     * @return string
+     */
+    public static function findNum($str = '')
+    {
+        $str = trim($str);
+        if (empty($str)) {
+            return '';
+        }
+        $result = '';
+        for ($i = 0; $i < strlen($str); ++$i) {
+            if (is_numeric($str[$i])) {
+                $result .= $str[$i];
+            }
+        }
+
+        return $result;
     }
 
     /**

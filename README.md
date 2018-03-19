@@ -17,7 +17,11 @@ $title = ['column1', 'column2'];
 $data = [['value1', 'value2']];
 
 // export excel
-ExportExcel::getInstance()->export($header, $title, $data);
+ExportExcel::getInstance()->simpleExport($header, $title, $data);
 ```
 
-![alt text](screenshot1.png "example")
+![alt text](screenshot1.png "simple")
+
+Maybe you has a complex form need to export, then you can check the examples and build the sheet as you want.
+
+![alt text](screenshot2.png "complex")
