@@ -12,7 +12,7 @@ composer require fengxw/awesome-export-excel
 
 ```php
 // define the arguments.
-$header = 'It is an header';
+$header = 'It is a header';
 $title = ['column1', 'column2'];
 $data = [['value1', 'value2']];
 
