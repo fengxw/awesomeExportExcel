@@ -20,9 +20,9 @@ $data = [['value1', 'value2']];
 ExportExcel::getInstance()->export($header, $title, $data);
 ```
 
-![alt text](screenshot3.png "simple")
+<img src="http://p2qcii88d.bkt.clouddn.com/screenshot3.png" alt="simple">
 
 ### One More thing
 Maybe you has a complex form need to export, then you can check the examples and build the sheet as you want.
 
-![alt text](screenshot2.png "complex")
+<img src="http://p2qcii88d.bkt.clouddn.com/screenshot2.png" alt="complex">
