@@ -27,6 +27,8 @@ class ExportExcel
      * @param array  $data,     e.g. [['value1', 'value2']]
      *                          data is a two-dimension array, the order of column and value should be same.
      * @param string $sheetName
+     *
+     * @throws \PHPExcel_Exception
      */
     public function export(
         $header,
@@ -65,6 +67,8 @@ class ExportExcel
      * @param array  $excelStyle
      *
      * @return $this
+     *
+     * @throws \PHPExcel_Exception
      */
     public function setHead(
         $headTxt,
@@ -83,7 +87,7 @@ class ExportExcel
             'height' => $height,
         ];
 
-        if (!empty($style['style'])) {
+        if (!empty($excelStyle)) {
             $styleHeader['style'] = $excelStyle;
         } else {
             $styleHeader['style'] = [
@@ -94,11 +98,11 @@ class ExportExcel
                 ],
                 'font' => [
                     'bold' => true,
-                    'size' => 14,
+                    'size' => 20,
                 ],
                 'alignment' => [
                     'horizontal' => \PHPExcel_Style_Alignment::HORIZONTAL_CENTER,
-                    'vertical' => \PHPExcel_Style_Alignment::VERTICAL_CENTER,
+                    'vertical' => \PHPExcel_Style_Alignment::VERTICAL_TOP,
                     'wrap' => true,
                 ],
             ];
@@ -116,6 +120,8 @@ class ExportExcel
      * @param array $title
      *
      * @return $this
+     *
+     * @throws \PHPExcel_Exception
      */
     public function setTitle($title)
     {
@@ -131,6 +137,8 @@ class ExportExcel
      * @param $rowCount
      *
      * @return $this
+     *
+     * @throws \PHPExcel_Exception
      */
     public function setData($data, $rowCount, $startColumn = 'A')
     {
@@ -152,15 +160,27 @@ class ExportExcel
      * @param $startCell
      * @param $endCell
      * @param $value
+     * @param $style
      *
+     * @throws \PHPExcel_Exception
      * @return $this
      */
-    public function setCell($value, $startCell, $endCell = '')
+    public function setCell($value, $startCell, $endCell = null, $style = [])
     {
         $this->excelObj->getActiveSheet()->setCellValue($startCell, $value);
 
         if ($endCell) {
             $this->excelObj->getActiveSheet()->mergeCells($startCell.':'.$endCell);
+        }
+
+        if (!empty($style)) {
+            $coordinate = $endCell ? $startCell.':'.$endCell : $startCell;
+
+            $this->excelObj->getActiveSheet()->getStyle();
+            $this->excelObj
+                ->getActiveSheet()
+                ->getStyle($coordinate)
+                ->applyFromArray($style);
         }
 
         return $this;
@@ -176,6 +196,8 @@ class ExportExcel
      * @param string $mediumCell
      *
      * @return $this
+     *
+     * @throws \PHPExcel_Exception
      */
     public function setKeyCell($key, $value, $startCell, $endCell, $mediumCell = '')
     {
@@ -198,6 +220,8 @@ class ExportExcel
      * @param $style
      *
      * @return $this
+     *
+     * @throws \PHPExcel_Exception
      */
     public function setStyle($style)
     {
@@ -250,6 +274,8 @@ class ExportExcel
      * @param array $excelStyle
      *
      * @return $this
+     *
+     * @throws \PHPExcel_Exception
      */
     public function setDefaultStyle($startCell, $endCell, $width = 15, $height = 30, $excelStyle = [])
     {
@@ -285,6 +311,8 @@ class ExportExcel
      * Output excel file.
      *
      * @param $filename
+     *
+     * @throws \PHPExcel_Exception
      */
     public function output($filename)
     {
@@ -352,5 +380,63 @@ class ExportExcel
         }
 
         return $uppercase ? strtoupper($letter) : $letter;
+    }
+
+    /**
+     * Set width Column
+     *
+     * @param $column
+     * @param $width
+     *
+     * @return $this
+     *
+     * @throws \PHPExcel_Exception
+     */
+    public function setColumn($column, $width)
+    {
+        // set width of column
+        $this->excelObj
+            ->getActiveSheet()
+            ->getColumnDimension($column)
+            ->setWidth($width);
+
+        return $this;
+    }
+
+    /**
+     * Set height of row
+     *
+     * @param $row
+     * @param $height
+     *
+     * @return $this
+     *
+     * @throws \PHPExcel_Exception
+     */
+    public function setHeight($row, $height)
+    {
+        // set width of column
+        $this->excelObj
+            ->getActiveSheet()
+            ->getRowDimension($row)
+            ->setRowHeight($height);
+
+        return $this;
+    }
+
+    /**
+     * @param $sheetName
+     * @param $index
+     *
+     * @return $this
+     *
+     * @throws \PHPExcel_Exception
+     */
+    public function activeSheet($sheetName, $index = 0)
+    {
+        $this->excelObj->setActiveSheetIndex($index);
+        $this->excelObj->getActiveSheet()->setTitle($sheetName);
+
+        return $this;
     }
 }
