@@ -2,18 +2,12 @@
 
 namespace Fengxw\Excel;
 
-class ExportExcel
+/**
+ * Class ExportExcel
+ * @package Fengxw\Excel
+ */
+class ExportExcel extends \PHPExcel
 {
-    /**
-     * object of phpExcel.
-     */
-    public $excelObj;
-
-    public function __construct()
-    {
-        $this->excelObj = new \PHPExcel();
-    }
-
     public static function getInstance()
     {
         return new self();
@@ -78,8 +72,8 @@ class ExportExcel
         $height = 40,
         $excelStyle = []
     ) {
-        $this->excelObj->setActiveSheetIndex(0);
-        $this->excelObj->getActiveSheet()->setTitle($sheetName);
+        $this->setActiveSheetIndex(0);
+        $this->getActiveSheet()->setTitle($sheetName);
 
         $styleHeader = [
             'start' => $startCell,
@@ -142,8 +136,7 @@ class ExportExcel
      */
     public function setData($data, $rowCount, $startColumn = 'A')
     {
-        $this->excelObj
-            ->getActiveSheet()
+        $this->getActiveSheet()
             ->fromArray(
                 $data,
                 null,
@@ -167,18 +160,17 @@ class ExportExcel
      */
     public function setCell($value, $startCell, $endCell = null, $style = [])
     {
-        $this->excelObj->getActiveSheet()->setCellValue($startCell, $value);
+        $this->getActiveSheet()->setCellValue($startCell, $value);
 
         if ($endCell) {
-            $this->excelObj->getActiveSheet()->mergeCells($startCell.':'.$endCell);
+            $this->getActiveSheet()->mergeCells($startCell.':'.$endCell);
         }
 
         if (!empty($style)) {
             $coordinate = $endCell ? $startCell.':'.$endCell : $startCell;
 
-            $this->excelObj->getActiveSheet()->getStyle();
-            $this->excelObj
-                ->getActiveSheet()
+            $this->getActiveSheet()->getStyle();
+            $this->getActiveSheet()
                 ->getStyle($coordinate)
                 ->applyFromArray($style);
         }
@@ -229,9 +221,8 @@ class ExportExcel
         $endCell = $style['end'];
         $excelStyle = $style['style'];
 
-        $this->excelObj->getActiveSheet()->getStyle();
-        $this->excelObj
-            ->getActiveSheet()
+        $this->getActiveSheet()->getStyle();
+        $this->getActiveSheet()
             ->getStyle($startCell.':'.$endCell)
             ->applyFromArray($excelStyle);
 
@@ -241,8 +232,7 @@ class ExportExcel
             $eColumn = substr($endCell, 0, 1);
 
             foreach (range($sColumn, $eColumn) as $item) {
-                $this->excelObj
-                    ->getActiveSheet()
+                $this->getActiveSheet()
                     ->getColumnDimension($item)
                     ->setWidth($style['width']);
             }
@@ -254,8 +244,7 @@ class ExportExcel
             $eRow = self::findNum($endCell);
 
             foreach (range($sRow, $eRow) as $item) {
-                $this->excelObj
-                    ->getActiveSheet()
+                $this->getActiveSheet()
                     ->getRowDimension($item)
                     ->setRowHeight($style['height']);
             }
@@ -320,7 +309,7 @@ class ExportExcel
         header('Content-Disposition: attachment;filename='.$filename);
         header('Cache-Control: max-age=0');
 
-        $objWriter = \PHPExcel_IOFactory::createWriter($this->excelObj, 'Excel5');
+        $objWriter = \PHPExcel_IOFactory::createWriter($this, 'Excel5');
         $objWriter->save('php://output');
     }
 
@@ -395,8 +384,7 @@ class ExportExcel
     public function setColumn($column, $width)
     {
         // set width of column
-        $this->excelObj
-            ->getActiveSheet()
+        $this->getActiveSheet()
             ->getColumnDimension($column)
             ->setWidth($width);
 
@@ -416,8 +404,7 @@ class ExportExcel
     public function setHeight($row, $height)
     {
         // set width of column
-        $this->excelObj
-            ->getActiveSheet()
+        $this->getActiveSheet()
             ->getRowDimension($row)
             ->setRowHeight($height);
 
@@ -434,8 +421,8 @@ class ExportExcel
      */
     public function activeSheet($sheetName, $index = 0)
     {
-        $this->excelObj->setActiveSheetIndex($index);
-        $this->excelObj->getActiveSheet()->setTitle($sheetName);
+        $this->setActiveSheetIndex($index);
+        $this->getActiveSheet()->setTitle($sheetName);
 
         return $this;
     }
